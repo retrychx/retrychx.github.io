@@ -39,20 +39,52 @@
     <p class="tag">moved</p>
     <h1>This handle is retired.</h1>
     <p>The account formerly at <code>retrychx</code> is now <code>migoric</code>.</p>
-    <p id="link-target"><a href="https://migoric.github.io/blog/">Continue to the new location &rarr;</a></p>
+    <p id="link-target"><a href="https://migoric.github.io/blog/">Continue to the blog &rarr;</a></p>
+    <p class="fine" id="note">If nothing happens, the link above still works.</p>
     <div class="rule"></div>
     <p class="fine">Old <code>retrychx.github.io/blog/&hellip;</code> URLs now live under
-      <code>migoric.github.io/blog/&hellip;</code> &mdash; same paths, new host.</p>
+      <code>migoric.github.io/blog/&hellip;</code> &mdash; same content, new host.</p>
   </main>
   <script>
-    // GitHub Pages serves this file for any unknown path, so the exact pathname
-    // is still available. The new site keeps the same URL structure, so the
-    // suffix maps 1:1 — carry it over instead of dumping everyone on the homepage.
-    var suffix = location.pathname + location.search + location.hash;
-    var target = 'https://migoric.github.io' + suffix;
-    var a = document.querySelector('#link-target a');
-    if (a) a.href = target;
-    location.replace(target);
+    // GitHub Pages serves this file (404.html) for any path that has no file on
+    // disk, and the requested pathname is still available here.
+    //
+    // Two things shape the mapping:
+    //   1. The old site never actually deployed — this repo's Actions history
+    //      holds only the two runs from the day the new site went live — so no
+    //      deep link to retrychx.github.io/blog/<post> was ever live. The
+    //      mapping below is therefore a best-effort courtesy, not a guarantee.
+    //   2. The new site nests posts one level deeper: it serves /blog/writing/
+    //      <slug>/ where the old layout would have served /blog/<slug>/. A
+    //      verbatim path copy would land every old post URL on the new 404.
+    //
+    // So: keep paths that exist verbatim, try the nested form for bare slugs,
+    // and send anything else to the blog index rather than the site root.
+    (function () {
+      var path = location.pathname;
+      var tail = location.search + location.hash;
+      var BLOG = '/blog/';
+      // Paths that exist verbatim on the new site.
+      var VERBATIM = ['/blog/', '/blog/about/', '/blog/writing/'];
+      var target;
+
+      if (path.indexOf(BLOG) === 0) {
+        var rest = path.slice(BLOG.length);
+        var verbatim = VERBATIM.indexOf(path) !== -1
+                    || rest.indexOf('writing/') === 0
+                    || /\.(xml|json|txt)$/.test(rest);
+        target = 'https://migoric.github.io/blog/' + (verbatim ? rest : 'writing/' + rest);
+      } else {
+        target = 'https://migoric.github.io/blog/';
+      }
+      target += tail;
+
+      var a = document.querySelector('#link-target a');
+      if (a) a.href = target;
+      var note = document.getElementById('note');
+      if (note) note.hidden = true;
+      location.replace(target);
+    })();
   </script>
 </body>
 </html>
